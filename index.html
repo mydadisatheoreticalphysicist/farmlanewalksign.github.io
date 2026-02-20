@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HashForge Lab — Custom Hashing Playground</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- MathJax for LaTeX rendering -->
+  <script>
+    MathJax = {
+      tex: { inlineMath: [['$','$'], ['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+      svg: { fontCache: 'global' },
+      startup: { ready() { MathJax.startup.defaultReady(); } }
+    };
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js"></script>
+</head>
+<body>
+
+<!-- ═══════════════ HERO ═══════════════ -->
+<header class="hero">
+  <div class="hero-bg-grid"></div>
+  <div class="hero-content">
+    <div class="logo-badge">HASHFORGE</div>
+    <h1>The Hashing <span class="accent">Lab</span></h1>
+    <p class="hero-sub">Design your own cryptographic hash functions using real mathematics.<br>
+    Visualize, experiment, and understand password security from first principles.</p>
+    <div class="hero-chips">
+      <span>🔢 Mathematical Functions</span>
+      <span>🔐 Password Policy</span>
+      <span>🧪 Live Experiments</span>
+      <span>📐 LaTeX Math Engine</span>
+    </div>
+    <nav class="hero-nav">
+      <a href="#lab">Open Lab</a>
+      <a href="#theory" class="ghost">Learn Theory</a>
+    </nav>
+  </div>
+  <div class="scroll-hint">↓</div>
+</header>
+
+<!-- ═══════════════ NAV TABS ═══════════════ -->
+<nav class="tab-bar" id="tab-bar">
+  <button class="tab active" data-tab="lab">⚗️ Hash Lab</button>
+  <button class="tab" data-tab="theory">📖 Theory</button>
+  <button class="tab" data-tab="policy">🛡️ Password Policy</button>
+  <button class="tab" data-tab="scenarios">🎭 Scenarios</button>
+</nav>
+
+<!-- ═══════════════════════════════════════
+     TAB: LAB
+════════════════════════════════════════ -->
+<main id="lab" class="tab-content active">
+
+  <div class="lab-layout">
+
+    <!-- LEFT: Builder -->
+    <aside class="panel builder-panel">
+      <h2 class="panel-title">🔧 Algorithm Builder</h2>
+
+      <label class="field-label">Algorithm Name</label>
+      <input id="algo-name" class="text-input" placeholder="e.g. MyHashV1" value="MyHashV1">
+
+      <label class="field-label">Password Input</label>
+      <input id="password-input" class="text-input" placeholder="Enter a password to hash…" value="P@ssw0rd!">
+
+      <label class="field-label">Salt (optional)</label>
+      <input id="salt-input" class="text-input" placeholder="Random salt string" value="xK9z">
+
+      <label class="field-label">Pipeline Steps</label>
+      <div id="step-list" class="step-list"></div>
+
+      <div class="add-step-row">
+        <select id="step-select" class="select-input">
+          <optgroup label="Transformation">
+            <option value="charcode_sum">∑ Char Code Sum</option>
+            <option value="polynomial_roll">P(x) Polynomial Rolling</option>
+            <option value="xor_fold">⊕ XOR Fold</option>
+            <option value="modular_exp">xⁿ Modular Exponent</option>
+            <option value="fibonacci_mix">φ Fibonacci Mix</option>
+            <option value="prime_multiply">π Prime Multiply</option>
+            <option value="bit_rotate">↻ Bit Rotation</option>
+            <option value="ascii_square">x² ASCII Square Sum</option>
+          </optgroup>
+          <optgroup label="Mixing">
+            <option value="avalanche">⚡ Avalanche Diffusion</option>
+            <option value="salt_inject">💊 Salt Injection</option>
+            <option value="rounds">🔄 Iteration Rounds</option>
+          </optgroup>
+          <optgroup label="Finalization">
+            <option value="hex_encode">🔡 Hex Encode</option>
+            <option value="modulo_trim">% Modulo Trim</option>
+          </optgroup>
+        </select>
+        <button class="btn-add" id="btn-add-step">+ Add Step</button>
+      </div>
+
+      <button class="btn-primary" id="btn-run">▶ Run Hash</button>
+      <button class="btn-secondary" id="btn-clear">✕ Clear Pipeline</button>
+
+      <div class="preset-row">
+        <span class="field-label">Presets:</span>
+        <button class="chip-btn" data-preset="simple">Simple</button>
+        <button class="chip-btn" data-preset="djb2">DJB2-like</button>
+        <button class="chip-btn" data-preset="secure">Secure-ish</button>
+      </div>
+    </aside>
+
+    <!-- CENTER: Visualizer -->
+    <section class="panel viz-panel">
+      <h2 class="panel-title">📊 Pipeline Visualizer</h2>
+      <div id="pipeline-viz" class="pipeline-viz">
+        <div class="pipeline-empty">Add steps to see the pipeline visualize here.</div>
+      </div>
+
+      <div class="output-section">
+        <div class="output-label">Hash Output</div>
+        <div id="hash-output" class="hash-output">—</div>
+        <div id="hash-meta" class="hash-meta"></div>
+      </div>
+
+      <div class="comparison-section">
+        <h3>🔍 Avalanche Effect Test</h3>
+        <p class="small-text">Flip one character — watch the hash change dramatically.</p>
+        <div id="avalanche-grid" class="avalanche-grid"></div>
+      </div>
+    </section>
+
+    <!-- RIGHT: Math Panel -->
+    <aside class="panel math-panel">
+      <h2 class="panel-title">📐 Math Inspector</h2>
+      <div id="math-display" class="math-display">
+        <p class="muted">Select a step to see its formula.</p>
+      </div>
+
+      <div class="step-trace">
+        <h3>Step-by-Step Trace</h3>
+        <div id="trace-log" class="trace-log">
+          <span class="muted">Run the hash to see trace values.</span>
+        </div>
+      </div>
+
+      <div class="custom-formula-box">
+        <h3>✏️ Custom Formula (LaTeX)</h3>
+        <textarea id="custom-latex" class="latex-input" placeholder="Enter LaTeX formula… e.g. H(x) = \sum_{i=0}^{n} c_i \cdot p^i \mod M"></textarea>
+        <button class="btn-secondary" id="btn-render-latex">Render Formula</button>
+        <div id="latex-output" class="latex-output"></div>
+      </div>
+    </aside>
+
+  </div>
+</main>
+
+<!-- ═══════════════════════════════════════
+     TAB: THEORY
+════════════════════════════════════════ -->
+<main id="theory" class="tab-content">
+  <div class="content-page">
+    <h2 class="page-title">📖 Hashing Theory</h2>
+
+    <div class="theory-grid">
+      <div class="theory-card">
+        <div class="theory-icon">∑</div>
+        <h3>What Is Hashing?</h3>
+        <p>A hash function maps data of arbitrary size to a fixed-size output called a digest. For passwords, we want:</p>
+        <ul>
+          <li><strong>Determinism</strong> — same input always yields same output</li>
+          <li><strong>One-way</strong> — computationally infeasible to reverse</li>
+          <li><strong>Avalanche</strong> — tiny input change → huge output change</li>
+          <li><strong>Collision resistance</strong> — hard to find two inputs with the same hash</li>
+        </ul>
+        <div class="math-block" id="def-hash">
+          $$H : \{0,1\}^* \rightarrow \{0,1\}^n$$
+        </div>
+      </div>
+
+      <div class="theory-card">
+        <div class="theory-icon">φ</div>
+        <h3>Polynomial Rolling Hash</h3>
+        <p>One of the most common non-cryptographic hash foundations. Each character contributes based on its position:</p>
+        <div class="math-block">
+          $$H(s) = \sum_{i=0}^{n-1} s_i \cdot p^i \pmod{m}$$
+        </div>
+        <p>Where $p$ is a prime (commonly 31 or 37) and $m$ is a large prime (e.g., $10^9 + 9$).</p>
+      </div>
+
+      <div class="theory-card">
+        <div class="theory-icon">⊕</div>
+        <h3>XOR Folding</h3>
+        <p>XOR (exclusive OR) is used extensively in hashing because it's reversible, fast, and mixes bits efficiently:</p>
+        <div class="math-block">
+          $$H_{\oplus}(x) = x_0 \oplus x_1 \oplus \cdots \oplus x_{n-1}$$
+        </div>
+        <p>Often combined with bit shifts to break symmetry: $x \oplus (x \gg k)$</p>
+      </div>
+
+      <div class="theory-card">
+        <div class="theory-icon">🔄</div>
+        <h3>Key Stretching &amp; Rounds</h3>
+        <p>Applying a hash function $k$ times dramatically increases brute-force cost:</p>
+        <div class="math-block">
+          $$H^{(k)}(x) = H(H(\cdots H(x)\cdots))$$
+        </div>
+        <p>bcrypt uses $2^{\text{cost}}$ rounds. PBKDF2 uses configurable iterations. This is why password hashing should be <em>slow</em>.</p>
+      </div>
+
+      <div class="theory-card">
+        <div class="theory-icon">🧂</div>
+        <h3>Salt &amp; Rainbow Tables</h3>
+        <p>A salt is random data prepended/appended to a password before hashing, making precomputed attacks impossible:</p>
+        <div class="math-block">
+          $$H_{\text{salted}}(p, s) = H(s \| p)$$
+        </div>
+        <p>Without salting, attackers can use rainbow tables to reverse millions of hashes instantly.</p>
+      </div>
+
+      <div class="theory-card">
+        <div class="theory-icon">∞</div>
+        <h3>Modular Arithmetic</h3>
+        <p>The modulo operation keeps hash values within a fixed range, essential for fixed-length outputs:</p>
+        <div class="math-block">
+          $$a \equiv b \pmod{m} \iff m \mid (a-b)$$
+        </div>
+        <p>Choosing $m$ as a prime minimizes collisions due to the distribution properties of primes.</p>
+      </div>
+    </div>
+
+    <div class="function-reference">
+      <h3>Function Reference Table</h3>
+      <table class="ref-table">
+        <thead><tr><th>Function</th><th>Formula</th><th>Purpose</th><th>Strength</th></tr></thead>
+        <tbody>
+          <tr><td>Char Code Sum</td><td>$\sum c_i$</td><td>Baseline accumulation</td><td>⭐</td></tr>
+          <tr><td>Polynomial Roll</td><td>$\sum c_i \cdot p^i \bmod m$</td><td>Position-sensitive hashing</td><td>⭐⭐⭐</td></tr>
+          <tr><td>XOR Fold</td><td>$h \leftarrow h \oplus c_i$</td><td>Bit mixing</td><td>⭐⭐</td></tr>
+          <tr><td>Mod Exp</td><td>$h^e \bmod n$</td><td>RSA-inspired hardening</td><td>⭐⭐⭐⭐</td></tr>
+          <tr><td>Fibonacci Mix</td><td>$h \cdot F_k \bmod m$</td><td>Irrational distribution</td><td>⭐⭐⭐</td></tr>
+          <tr><td>Avalanche</td><td>$h \oplus (h \gg 16)$</td><td>Diffusion</td><td>⭐⭐⭐⭐</td></tr>
+          <tr><td>Bit Rotate</td><td>$\text{ROTL}(h, k)$</td><td>Non-linear mixing</td><td>⭐⭐⭐</td></tr>
+          <tr><td>Prime Multiply</td><td>$h \cdot p_k \bmod m$</td><td>Avalanche trigger</td><td>⭐⭐⭐</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<!-- ═══════════════════════════════════════
+     TAB: POLICY
+════════════════════════════════════════ -->
+<main id="policy" class="tab-content">
+  <div class="content-page">
+    <h2 class="page-title">🛡️ Password Policy</h2>
+
+    <div class="policy-hero-box">
+      <div class="policy-icon">🔐</div>
+      <div>
+        <h3>Why Does Password Policy Matter?</h3>
+        <p>A password policy is a set of rules designed to enhance computer security by encouraging users to use strong passwords and apply them properly. Without policy, users default to weak, reused, and guessable passwords — the leading cause of data breaches.</p>
+      </div>
+    </div>
+
+    <div class="policy-grid">
+      <div class="policy-card green">
+        <h4>✅ Minimum Requirements</h4>
+        <ul>
+          <li>At least <strong>12 characters</strong> (NIST recommends 15+)</li>
+          <li>Mix of uppercase, lowercase, digits, symbols</li>
+          <li>No dictionary words or common patterns</li>
+          <li>No sequential characters (abc, 123)</li>
+        </ul>
+      </div>
+      <div class="policy-card blue">
+        <h4>🔁 Rotation &amp; Reuse</h4>
+        <ul>
+          <li>Don't force frequent rotation (NIST 2024 guidance)</li>
+          <li>Rotate only on compromise suspicion</li>
+          <li>Block last 10+ previously used passwords</li>
+          <li>Use password managers, not sticky notes</li>
+        </ul>
+      </div>
+      <div class="policy-card yellow">
+        <h4>⚙️ Storage Requirements</h4>
+        <ul>
+          <li><strong>Never</strong> store plain text passwords</li>
+          <li>Use adaptive hashing: bcrypt, Argon2, scrypt</li>
+          <li>Always use a unique per-user salt</li>
+          <li>Use peppering for additional security</li>
+        </ul>
+      </div>
+      <div class="policy-card red">
+        <h4>🚨 Common Mistakes</h4>
+        <ul>
+          <li>MD5 / SHA-1 for passwords (fast = dangerous)</li>
+          <li>No salting → rainbow table attacks</li>
+          <li>Storing passwords in logs or emails</li>
+          <li>Weak entropy = predictable patterns</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="strength-meter-demo">
+      <h3>🎯 Live Password Strength Analyzer</h3>
+      <input id="policy-pw-input" class="text-input wide" placeholder="Type a password to analyze its strength…">
+      <div id="strength-bar-wrap">
+        <div id="strength-bar"></div>
+      </div>
+      <div id="strength-feedback" class="strength-feedback"></div>
+      <div id="entropy-display" class="entropy-display"></div>
+    </div>
+
+    <div class="policy-examples">
+      <h3>📋 Example Passwords Evaluated</h3>
+      <table class="ref-table">
+        <thead><tr><th>Password</th><th>Entropy (bits)</th><th>Time to Crack</th><th>Verdict</th></tr></thead>
+        <tbody>
+          <tr><td><code>password</code></td><td>~18 bits</td><td>&lt; 1 second</td><td class="bad">❌ Terrible</td></tr>
+          <tr><td><code>P@ssw0rd</code></td><td>~28 bits</td><td>~3 hours</td><td class="warn">⚠️ Weak</td></tr>
+          <tr><td><code>Tr0ub4dor&amp;3</code></td><td>~44 bits</td><td>~550 years</td><td class="ok">✅ OK</td></tr>
+          <tr><td><code>correct-horse-battery-staple</code></td><td>~44 bits</td><td>~550 years</td><td class="ok">✅ Great</td></tr>
+          <tr><td><code>j8#Kq$2!mNpL&amp;vX</code></td><td>~95 bits</td><td>Heat death of universe</td><td class="good">🏆 Excellent</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="math-explainer-box">
+      <h3>📐 Entropy Formula</h3>
+      <div class="math-block">
+        $$H = L \cdot \log_2(N)$$
+      </div>
+      <p>Where $L$ is password length and $N$ is the character pool size (e.g., $N=95$ for all printable ASCII). A 16-char random ASCII password achieves $16 \times \log_2(95) \approx 105$ bits of entropy.</p>
+    </div>
+  </div>
+</main>
+
+<!-- ═══════════════════════════════════════
+     TAB: SCENARIOS
+════════════════════════════════════════ -->
+<main id="scenarios" class="tab-content">
+  <div class="content-page">
+    <h2 class="page-title">🎭 Real-World Scenarios</h2>
+
+    <div class="scenario-cards">
+
+      <div class="scenario-card">
+        <div class="sc-header">
+          <span class="sc-badge danger">⚠️ Breach</span>
+          <h3>Scenario 1: The LinkedIn Leak (2012)</h3>
+        </div>
+        <p>LinkedIn stored 117M passwords using unsalted SHA-1. Within days of the breach, 90% of passwords were cracked using rainbow tables.</p>
+        <div class="sc-lesson">
+          <strong>Hash Used:</strong> SHA-1 (no salt)<br>
+          <strong>Time to Crack:</strong> &lt; 48 hours for most<br>
+          <strong>Lesson:</strong> Fast algorithms + no salt = catastrophic failure
+        </div>
+        <div class="sc-math">
+          $$\text{SHA-1}(password) = \text{5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8}$$
+          <p class="small-text">Every user with password "password" had the <em>identical</em> hash. One lookup, millions exposed.</p>
+        </div>
+        <button class="btn-secondary sc-demo-btn" data-demo="linkedin">▶ Simulate in Lab</button>
+      </div>
+
+      <div class="scenario-card">
+        <div class="sc-header">
+          <span class="sc-badge warning">🔶 Weak</span>
+          <h3>Scenario 2: The MD5 Era</h3>
+        </div>
+        <p>Early web apps used MD5 for password storage. MD5 computes ~10 billion hashes/second on modern GPUs, making brute-force trivial.</p>
+        <div class="sc-lesson">
+          <strong>Hash Used:</strong> MD5<br>
+          <strong>GPU Speed:</strong> ~10 billion H/s<br>
+          <strong>Lesson:</strong> Speed is the enemy of password security
+        </div>
+        <div class="sc-math">
+          $$\text{Guesses per second} = 10^{10}$$
+          $$\text{Keyspace} (8\text{-char lower}) = 26^8 \approx 2 \times 10^{11}$$
+          $$\text{Time} = \frac{2 \times 10^{11}}{10^{10}} \approx 20 \text{ seconds}$$
+        </div>
+        <button class="btn-secondary sc-demo-btn" data-demo="md5">▶ Simulate in Lab</button>
+      </div>
+
+      <div class="scenario-card">
+        <div class="sc-header">
+          <span class="sc-badge success">✅ Secure</span>
+          <h3>Scenario 3: Modern Argon2 Deployment</h3>
+        </div>
+        <p>Argon2 (2015 PHC winner) uses memory-hardness to defeat GPU attacks. Even with a breach, cracking is computationally infeasible.</p>
+        <div class="sc-lesson">
+          <strong>Hash Used:</strong> Argon2id<br>
+          <strong>Parameters:</strong> m=65536, t=3, p=4<br>
+          <strong>Lesson:</strong> Memory-hard + slow = resistant to parallelization
+        </div>
+        <div class="sc-math">
+          $$\text{Cost} = O(m \cdot t) \text{ per guess}$$
+          $$\text{GPU} \approx 10 \text{ H/s vs MD5's } 10^{10} \text{ H/s}$$
+          $$\text{Speedup factor} = 10^9\times \text{ slower}$$
+        </div>
+        <button class="btn-secondary sc-demo-btn" data-demo="argon2">▶ Simulate in Lab</button>
+      </div>
+
+      <div class="scenario-card">
+        <div class="sc-header">
+          <span class="sc-badge info">🎓 Education</span>
+          <h3>Scenario 4: Your Custom Hash Lab</h3>
+        </div>
+        <p>Build your own educational hash using this lab. Understand why each mathematical operation adds or removes security. Experiment with what properties make hashing robust.</p>
+        <div class="sc-lesson">
+          <strong>Goal:</strong> Understand properties, not deploy<br>
+          <strong>Key Properties:</strong> Avalanche, diffusion, confusion<br>
+          <strong>Lesson:</strong> Never roll your own crypto in production!
+        </div>
+        <div class="sc-math">
+          $$H_{\text{custom}}(p, s) = f_n(\cdots f_2(f_1(p \| s)) \cdots) \bmod M$$
+          <p class="small-text">Composition of functions with a salt creates the pipeline you build in the lab.</p>
+        </div>
+        <button class="btn-secondary sc-demo-btn" data-demo="custom">▶ Open in Lab</button>
+      </div>
+
+    </div>
+
+    <div class="timeline-section">
+      <h3>🕐 Hashing Algorithm Timeline</h3>
+      <div class="timeline">
+        <div class="tl-item"><span class="tl-year">1978</span><span class="tl-name">DES-crypt</span><span class="tl-desc">First Unix password hashing</span></div>
+        <div class="tl-item"><span class="tl-year">1992</span><span class="tl-name">MD5</span><span class="tl-desc">Fast, now broken for passwords</span></div>
+        <div class="tl-item"><span class="tl-year">1995</span><span class="tl-name">SHA-1</span><span class="tl-desc">Widely used, deprecated 2017</span></div>
+        <div class="tl-item"><span class="tl-year">1999</span><span class="tl-name">bcrypt</span><span class="tl-desc">Adaptive, still recommended</span></div>
+        <div class="tl-item"><span class="tl-year">2009</span><span class="tl-name">scrypt</span><span class="tl-desc">Memory-hard, GPU-resistant</span></div>
+        <div class="tl-item"><span class="tl-year">2015</span><span class="tl-name">Argon2</span><span class="tl-desc">PHC winner, current gold standard</span></div>
+        <div class="tl-item tl-future"><span class="tl-year">2024+</span><span class="tl-name">Post-Quantum?</span><span class="tl-desc">Preparing for quantum threats</span></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ═══════════════ FOOTER ═══════════════ -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">HASHFORGE LAB</div>
+    <p class="footer-note">⚠️ Educational tool only. Never use custom hash functions for real password storage.<br>
+    Use <strong>bcrypt</strong>, <strong>Argon2</strong>, or <strong>scrypt</strong> in production.</p>
+    <p class="footer-math">$H : \{0,1\}^* \rightarrow \{0,1\}^n \quad \text{where collision resistance holds}$</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
